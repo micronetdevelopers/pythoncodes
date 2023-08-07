@@ -1,0 +1,80 @@
+# Using GDAL Mosiac
+
+import os
+from osgeo import gdal
+import glob
+import subprocess
+
+
+
+dirpath = r"D:\Python_work\30cm\Images"
+
+#out_fp = r"D:\Python_work\Images_15cm\Mosaic.tif"
+
+search_criteria = "dim*.img"
+
+q = os.path.join(dirpath, search_criteria)
+
+print(q)
+
+dem_fps = glob.glob(q)
+
+dem_fps
+
+#demList = glob.glob("L[0-2][0-2].tif")
+#print(demList)
+#cmd = "gdal_merge.py -ps 0.1499999999999999944 -0.1499999999999999944 -o Mosaic.tif"
+
+#subprocess.call('cmd.split()+dem_fps', shell=True)
+
+
+vrt = gdal.BuildVRT("D:\Python_work\30cm", dem_fps)
+gdal.Translate("output2.img", vrt, xRes = 0.30, yRes = -0.30)
+vrt = None
+
+gdal_translate -of GTiff -co "TILED=YES" utm.tif utm_tiled.tif
+
+# Using Rasterio
+
+import os
+from osgeo import gdal
+import rasterio
+from rasterio.merge import merge
+from rasterio.plot import show
+import glob
+
+dirpath = r"D:\Python_work\Images_15cm"
+
+out_fp = r"D:\Python_work\Images_15cm\Mosaic.tif"
+
+search_criteria = "L*.tif"
+
+q = os.path.join(dirpath, search_criteria)
+
+print(q)
+
+dem_fps = glob.glob(q)
+
+dem_fps
+
+src_files_to_mosaic = []
+
+for fp in dem_fps:
+    src = rasterio.open(fp)
+    src_files_to_mosaic.append(src)
+    
+src_files_to_mosaic
+
+
+mosaic, out_trans = merge(src_files_to_mosaic)
+
+out_meta = src.meta.copy()
+
+out_meta.update({"driver": "GTiff",
+                 "height": mosaic.shape[1],
+                 "width": mosaic.shape[2],
+                 "transform": out_trans,
+                 "crs": src.crs,
+                 })
+with rasterio.open(out_fp, "w", **out_meta) as dest:
+   dest.write(mosaic)

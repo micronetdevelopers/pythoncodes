@@ -1,0 +1,16 @@
+                          # Number 2
+
+''' Single Band To RGB Using GDAL function gdaldem color_relief ''' 
+
+import os
+import subprocess
+import matplotlib.pyplot as plt
+from osgeo import gdal
+ 
+#input_file = r"D:\Python_work\Agriculture\Python_Files\NDVI\Clustering_output\test1.tif" 
+
+
+cmd = "gdaldem color-relief -nearest_color_entry test1.tif color-relief.txt OutPut1.tif"
+
+
+os.system(cmd)

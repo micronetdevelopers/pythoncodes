@@ -1,0 +1,48 @@
+import rasterio
+from rasterio.warp import calculate_default_transform, reproject, Resampling
+#open source raster
+inputraster = r"D:\Raster_Images\Raw_Images\20191001_20191015.tif"
+srcRst = rasterio.open(inputraster)
+print("source raster crs:")
+print(srcRst.crs)
+print(srcRst.shape)
+
+
+
+dstCrs = {'init': 'EPSG:32643'}
+print("destination raster crs:")
+print(dstCrs)
+
+# calculate transform array and shape of reprojected raster
+transform, width, height = calculate_default_transform(
+        srcRst.crs, dstCrs, srcRst.width, srcRst.height, *srcRst.bounds)
+
+print("transform array of source raster")
+print(srcRst.transform)
+
+print("transform array of destination raster")
+print(transform)
+
+
+#working of the meta for the destination raster
+kwargs = srcRst.meta.copy()
+kwargs.update({
+        'crs': dstCrs,
+        'transform': transform,
+        'width': width,
+        'height': height
+    })
+#open destination raster
+dstRst = rasterio.open('landsatImageWgs84.tif', 'w', **kwargs)
+#reproject and save raster band data
+for i in range(1, srcRst.count + 1):
+    reproject(
+        source=rasterio.band(srcRst, i),
+        destination=rasterio.band(dstRst, i),
+        #src_transform=srcRst.transform,
+        src_crs=srcRst.crs,
+        #dst_transform=transform,
+        dst_crs=dstCrs,
+        resampling=Resampling.nearest)
+#close destinat'ion raster
+dstRst.close()

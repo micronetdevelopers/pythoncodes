@@ -1,0 +1,172 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Dec 26 15:49:25 2022
+
+@author: admin
+"""
+
+
+'''
+In This code i Reproject 700 Tiels with different zone into commaon projection "4326"
+'''
+
+import os
+import glob
+import rasterio
+from rasterio.warp import calculate_default_transform, reproject
+from rasterio.merge import merge
+import numpy as np
+from osgeo import gdal
+
+# Set the output folder and the destination CRS
+output_folder = r"D:\Raster_Images\Raw_Data\New folder"
+dst_crs = {"init": "EPSG:4326"}
+
+dirpath = r"D:\Raster_Images\Raw_Data\Tiff_file"
+search_criteria = "AP*.tif"
+
+q = os.path.join(dirpath, search_criteria)
+
+print(q)
+
+tif_files = glob.glob(q)
+
+tif_files
+# Get a list of the input TIFF files
+#tif_files = glob.glob("*.tif")
+
+# Loop through the TIFF files
+for i, tif_file in enumerate(tif_files):
+    # Open the input raster
+    with rasterio.open(tif_file) as src:
+        # Calculate the new transform and bounds for the output raster
+        transform, width, height = calculate_default_transform(
+            src.crs, # source CRS
+            dst_crs, # destination CRS
+            src.width, # source width
+            src.height, # source height
+            *src.bounds # source bounds
+        )
+        kwargs = src.meta.copy()
+        kwargs.update({
+            "crs": dst_crs,
+            "transform": transform,
+            "width": width,
+            "height": height
+        })
+        # Create the output file path
+        output_file_str = tif_file
+        #print(output_file_str)
+        #print(output_file_str[36:-4])
+        # Create an output raster with the same dimensions and CRS as the input raster
+        with rasterio.open(output_file_str[36:-4] + "_repro{0}.tif".format(i), "w", **kwargs) as dst:
+            # Reproject and write the input raster to the output raster
+            reproject(
+                source=rasterio.band(src, 1),
+                destination=rasterio.band(dst, 1),
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=transform,
+                dst_crs=dst_crs,
+                resampling=rasterio.warp.Resampling.nearest
+            )
+            dst.close()
+
+
+dirpath = r"D:\Raster_Images\Raw_Data\New_folder"
+
+out_fp = r"D:\Raster_Images\Raw_Data\Tiff_file\Mosaic_Output\Mosaic_01.tif"
+
+search_criteria = "AP*.tif"
+
+q = os.path.join(dirpath, search_criteria)
+
+print(q)
+
+dem_fps = glob.glob(q)
+
+dem_fps
+
+import os
+
+# Loop through the files in the directory
+for i, filename in enumerate(dem_fps):
+        with rasterio.open(filename, 'r') as src:
+            data = src.read()
+            # Convert the data type to int8
+            #data_int8 = data.astype(np.int8)
+            
+            profile = src.profile
+            profile.update(
+                driver='GTiff',
+                dtype=rasterio.uint8,
+                coun=1,
+                compress='lzw'
+            )
+            
+            # Create the output file path
+            output_file_str = filename
+
+            # Create a new raster with the int8 data type
+            with rasterio.open(output_file_str[36:-4] + "_repro{0}.tif".format(i), 'w', **profile) as dst:
+                dst.write(data.astype(rasterio.uint8))
+                dst.close()
+        
+        
+        
+        
+dirpath = r"D:\Raster_Images\Tiles"
+
+out_fp = r"D:\Raster_Images\Raw_Data\Tiff_file\Mosaic_Output\Mosaic_02.tif"
+
+search_criteria = "l*.tif"
+
+q = os.path.join(dirpath, search_criteria)
+
+print(q)
+
+dem_fps = glob.glob(q)
+
+dem_fps
+
+
+
+
+# First 
+src_files_to_mosaic = []
+
+for fp in dem_fps:
+    src = rasterio.open(fp)
+    print(src.crs)
+    src_files_to_mosaic.append(src)
+    
+src_files_to_mosaic
+
+#mosaic, out_transform = rasterio.merge.merge(src_files_to_mosaic)
+
+mosaic, out_trans = merge(src_files_to_mosaic)
+
+# Second 
+src_files_to_mosaic1 = []
+for fp1 in dem_fps[101:201]:
+    src1 = rasterio.open(fp1)
+    print(src1.crs)
+    src_files_to_mosaic1.append(src1)
+    
+src_files_to_mosaic1
+
+mosaic1, out_trans1 = merge(src_files_to_mosaic1)
+
+out_meta = src.meta.copy()
+
+out_meta.update({"driver": "GTiff",
+                 "height": mosaic.shape[1],
+                 "width": mosaic.shape[2],
+                 "transform": out_trans,
+                 "crs": src.crs,
+                 })
+with rasterio.open(out_fp, "w", **out_meta) as dest:
+   dest.write(mosaic)
+
+
+

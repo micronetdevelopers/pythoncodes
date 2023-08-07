@@ -1,0 +1,11 @@
+# Calculation
+                        # NDWI = (3 - 5)/(3 + 5)
+                        date_folder
+                        band3 = glob.glob(os.path.join(date_folder, '*B3.TIF'))
+                        band5 = glob.glob(os.path.join(date_folder, '*B5.TIF'))
+                        b3 = rio.open(band3[0])
+                        b5 = rio.open(band5[0])
+                        green = b3.read()
+                        nir = b5.read()
+                        ndwi = (nir.astype(float)-green.astype(float))/(nir+green)
+                        print(type(ndwi))

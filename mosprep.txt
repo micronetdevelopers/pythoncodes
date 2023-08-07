@@ -1,0 +1,50 @@
+## raster data into vrt or xml conversion
+gdal_translate -of VRT E:\15cm_micronet2_output.img E:\output_image1.vrt
+
+
+gdal_translate -of GeoTIFF E:\images-new\new-mosaic.vrt E:\images-new\mosaic.tif
+
+
+
+
+# create pix file
+
+from pci.link import link
+
+link(fili=r"E:\Panshapenning\Panshar", filo=r"E:\Panshapenning\\imageA.pix")
+
+
+
+from pci.link import link
+
+link(fili=r"E:\Panshapenning\Panshaf", filo=r"E:\Panshapenning\\imageB.pix")
+
+
+
+### Mosaic using Catalyst python version 3.6.8 in cmd ####
+ref = https://pcigeomatics.github.io/PCI-Geomatics-Python-Cookbook/geomatica_cookbook_mosaicking.html#automatic-color-balancing-and-cutline-generation-with-qa-preview-mosaic
+
+
+from pci.mosprep import mosprep
+
+orthos = r"D:\Raster_Images\sentinel-1\Raw_Images"
+src_img_file = r"E:\Sentinel-1\out\mosaic.mos"
+
+mosprep(mfile=orthos, silfile=src_img_file, sortmthd="NEARESTCENTER", normaliz="ADAPTIVE", balspec="BUNDLE", cutmthd="MINSQDIFF")
+
+
+
+from pci.mosdef import mosdef
+from pci.mosrun import mosrun
+
+# Create Mosaic Definition XML file to
+src_image_file = r"E:\Sentinel-1\out\mosaic.mos"  # Output from mosprep
+mosdef_file = r"E:\Sentinel-1\out\mosdef.xml"
+
+mosdef(silfile=src_image_file, mdfile=mosdef_file, pxszout=[10], blend=[5])
+
+# Create full resolution mosaic
+mos_dir = r"E:\Sentinel-1\out\Final-Mosaic"
+source_map = "yes"
+
+mosrun(silfile=src_image_file, mdfile=mosdef_file, outdir=mos_dir, crsrcmap="YES")

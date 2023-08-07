@@ -1,0 +1,8 @@
+import gdal
+from osgeo import gdal
+
+filename = r"D:\Raster_Images\Raw_Images\20191001_20191015.tif"
+input_raster = gdal.Open(filename)
+output_raster = r"D:\Raster_Images\Raw_Images\Raw_All_Mosaic\reproject_out.tif"
+warp = gdal.Warp(output_raster,input_raster,dstSRS='EPSG:32643')
+warp = None # Closes the files

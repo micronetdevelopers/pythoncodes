@@ -1,0 +1,59 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Dec 24 10:18:06 2022
+
+@author: admin
+"""
+
+import glob
+import os
+import rasterio
+from rasterio.windows import Window
+import numpy as np
+
+
+dirpath = r"D:\Python_work\Agriculture\Python_Files\NDVI\ndvi_input_img\Raw_Mosaic_Images\New folder"
+search_criteria = "2*.tif"
+q = os.path.join(dirpath, search_criteria)
+print(q)
+
+input_files = glob.glob(q)
+
+input_files
+
+#input_folder = '/path/to/input/folder'
+output_folder = r'D:\Python_work\Agriculture\Python_Files\NDVI'
+
+
+for i, input_file in enumerate(input_files):
+    # Open the input file using rasterio
+    with rasterio.open(input_file) as src:
+        # Read the red and near-infrared bands
+        red_band = src.read(3)
+        nir_band = src.read(4)
+        # Allow division by zero 
+        np.seterr(divide='ignore', invalid='ignore')
+        ndvi = (nir_band.astype('float32') - red_band.astype('float32')) / (nir_band + red_band)
+        kwargs = src.meta
+        kwargs.update(
+            dtype=rasterio.float32,
+            count = 1)
+        tmp = input_file
+        #outputfiles_path = input_files
+        
+        with rasterio.open(tmp[89:-8] + "_ndvi{0}.tif".format(i), 'w', **kwargs) as dst:
+            # Write the NDVI data to the new raster file
+            dst.write(ndvi, 1)
+            dst.close()
+                  
+
+tmp = input_file
+# print(tmp)
+#print(tmp[:-3])
+
+print(tmp[89:-13])
+
+print(tmp[:20])
+print(type(tmp))
+
+

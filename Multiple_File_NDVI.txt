@@ -1,0 +1,115 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Nov 15 11:40:06 2022
+
+@author: admin
+"""
+
+import rasterio
+import numpy
+
+files1 = r'D:\\NDVI\\ndvi_input_img\\Raw_Mosaic_Images\\20200101_20200115_mos.tif'
+files2 = r"D:\\NDVI\\ndvi_input_img\\Raw_Mosaic_Images\\20200116_20200131_mos.tif"
+files3 = r"D:\\NDVI\\ndvi_input_img\\Raw_Mosaic_Images\\20200201_20200215_mos.tif"
+files4 = r"D:\\NDVI\\ndvi_input_img\\Raw_Mosaic_Images\\20200216_20200229_mos.tif"
+files5 = r"D:\\NDVI\\ndvi_input_img\\Raw_Mosaic_Images\\20200301_20200315_mos.tif"
+files6 = r"D:\\NDVI\\ndvi_input_img\\Raw_Mosaic_Images\\20200316_20200331_mos.tif"
+
+
+         #file1
+with rasterio.open(files1) as src:
+    band_red1 = src.read(3)
+   
+
+with rasterio.open(files1) as src:
+    band_nir1 = src.read(4)
+    
+
+        #file2
+with rasterio.open(files2) as src:
+    band_red2 = src.read(3)
+   
+with rasterio.open(files2) as src:
+    band_nir2 = src.read(4)
+    
+
+         #file3
+with rasterio.open(files3) as src:
+    band_red3 = src.read(3)
+    
+
+with rasterio.open(files3) as src:
+    band_nir3 = src.read(4)
+    
+
+          #file4
+with rasterio.open(files4) as src:
+    band_red4 = src.read(3)
+    
+
+with rasterio.open(files4) as src:
+    band_nir4 = src.read(4)
+    
+
+         #file5
+with rasterio.open(files5) as src:
+    band_red5 = src.read(3)
+    
+
+with rasterio.open(files5) as src:
+    band_nir5 = src.read(4)
+    
+         #file5
+with rasterio.open(files6) as src:
+    band_red6 = src.read(3)
+    
+
+with rasterio.open(files6) as src:
+    band_nir6 = src.read(4)
+
+
+numpy.seterr(divide='ignore', invalid='ignore')
+
+
+ndvi1 = (band_nir1.astype(float) - band_red1.astype(float)) / (band_nir1 + band_red1)
+ndvi2 = (band_nir2.astype(float) - band_red2.astype(float)) / (band_nir2 + band_red2)
+ndvi3 = (band_nir3.astype(float) - band_red3.astype(float)) / (band_nir3 + band_red3)
+ndvi4 = (band_nir4.astype(float) - band_red4.astype(float)) / (band_nir4 + band_red4)
+ndvi5 = (band_nir5.astype(float) - band_red5.astype(float)) / (band_nir5 + band_red5)
+ndvi6 = (band_nir6.astype(float) - band_red6.astype(float)) / (band_nir6 + band_red6)
+
+kwargs = src.meta
+kwargs.update(
+    dtype=rasterio.float32,
+    count = 1)
+
+
+        #file1
+with rasterio.open("ndvi0.tif", 'w', **kwargs) as dst:
+    dst.write_band(1, ndvi1.astype(rasterio.float32))
+    
+        
+        
+        #file2
+with rasterio.open("ndvi1.tif", 'w', **kwargs) as dst:
+    dst.write_band(1, ndvi2.astype(rasterio.float32))
+        
+        
+        #file3
+with rasterio.open("ndvi2.tif", 'w', **kwargs) as dst:
+    dst.write_band(1, ndvi3.astype(rasterio.float32))
+        
+        
+        #file4
+with rasterio.open("ndvi3.tif", 'w', **kwargs) as dst:
+    dst.write_band(1, ndvi4.astype(rasterio.float32))
+        
+        
+        #file5
+with rasterio.open("ndvi4.tif", 'w', **kwargs) as dst:
+    dst.write_band(1, ndvi5.astype(rasterio.float32))
+
+      #file6
+with rasterio.open("ndvi5.tif", 'w', **kwargs) as dst:
+    dst.write_band(1, ndvi6.astype(rasterio.float32))
+        

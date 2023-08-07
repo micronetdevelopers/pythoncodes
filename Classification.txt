@@ -1,0 +1,113 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Nov 21 14:48:42 2022
+
+@author: admin
+"""
+
+import rasterio as rio
+from rasterio.plot import show
+from rasterio.transform import from_origin
+from sklearn import cluster
+import matplotlib.pyplot as plt
+import matplotlib.colors as mc
+import numpy as np
+
+
+
+# Reference site
+# https://towardsdatascience.com/sentinel-2-image-clustering-in-python-58f7f2c8a7f6 
+
+
+# Open the image 
+elhas_raster = rio.open(r"D:\NDVI\Stacking_out\Stacking_output\stack.tif")
+print(elhas_raster.meta)
+
+# Read, enhance and show the image
+elhas_arr = elhas_raster.read() # read the opened image
+vmin, vmax = np.nanpercentile(elhas_arr, (5,95))  # 5-95% contrast stretch
+# show the enhanced image
+plt.figure(figsize=[20,20])
+show(elhas_raster, cmap='gray', vmin=vmin, vmax=vmax)
+plt.show()
+
+# create an empty array with same dimension and data type
+imgxyb = np.empty((elhas_raster.height, elhas_raster.width, elhas_raster.count), elhas_raster.meta['dtype'])
+# loop through the raster's bands to fill the empty array
+for band in range(imgxyb.shape[2]):
+    imgxyb[:,:,band] = elhas_raster.read(band+1)
+    
+print(imgxyb.shape)
+imgxyb.size
+# convert to 1d array
+img1d=imgxyb[:,:,:6].reshape((imgxyb.shape[0]*imgxyb.shape[1],imgxyb.shape[2]))
+
+img1d.shape
+
+images = img1d
+
+
+
+      #### Here i am converting NaN Value into Zero(0) ####
+b = np.where(np.isnan(images), 0, images)
+print(b)
+
+## NaN Value Remove
+#b = images[np.logical_not(np.isnan(images))]
+#c = b.reshape(-1, 1)
+#print(c)
+#c.shape
+#c.size
+
+
+
+                   # clustering
+cl = cluster.KMeans(n_clusters=20) # create an object of the classifier
+print(cl)
+
+param = cl.fit(b) # train it
+
+img_cl = cl.labels_ # get the labels of the classes
+img_cl.shape
+img_cl = img_cl.reshape(imgxyb[:,:,0].shape) # reshape labels to a 3d array (one band only)
+img_cl.shape
+img_cl.size
+print(img_cl)
+
+
+                ####### to seee clustering the color map #####
+# Create a custom color map to represent our different 4 classes
+cmap = mc.LinearSegmentedColormap.from_list("", ["black","red","green","yellow"])
+# Show the resulting array and save it as jpg image
+plt.figure(figsize=[20,20])
+plt.imshow(img_cl, cmap=cmap)
+print(img_cl, cmap)
+#plt.axis('off')
+plt.savefig("elhas_clustered.png", bbox_inches='tight')
+plt.show()
+
+
+               #### To Save numpy array into raster image using rasterio ####
+# https://gis.stackexchange.com/questions/279953/numpy-array-to-gtiff-using-rasterio-without-source-raster
+# Reference
+
+arr = img_cl
+transform = from_origin(6465, 7365, 4.7, 4.7)
+
+new_dataset = rio.open('test1.tif', 'w', driver='GTiff',
+                            height = arr.shape[0], width = arr.shape[1],
+                            count=1, dtype=str(arr.dtype),
+                            crs='+proj=utm +zone=10 +ellps=GRS80 +datum=NAD83 +units=m +no_defs',
+                            transform=transform)
+
+new_dataset.write(arr, 1)
+new_dataset.close()
+ 
+              
+              
+
+
+
+gdal_translate -ot Float32 -a_nodata 0 E:\images-new\imageA.tif E:\images-new\output_image1.tif
+
+

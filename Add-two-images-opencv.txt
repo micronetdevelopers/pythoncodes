@@ -1,0 +1,18 @@
+#### add two images using opencv ####
+
+import cv2
+
+image1 = cv2.imread("crop1.tif")
+
+image2 = cv2.imread("crop2.tif")
+
+
+image1 = cv2.resize(image1, (23294, 33223))
+
+image2 = cv2.resize(image2, (23294, 33223))
+
+output_image = cv2.add(image1, image2)
+
+
+# Save the output image
+cv2.imwrite('output_01.tif', output_image)

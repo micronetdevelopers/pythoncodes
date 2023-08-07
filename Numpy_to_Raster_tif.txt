@@ -1,0 +1,89 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Dec 19 17:28:17 2022
+
+@author: admin
+"""
+############### Program to save Numpy Array to Raster Tif File ###############
+import rasterio 
+from pyproj import CRS
+from rasterio.transform import from_origin
+#from rasterio.crs import CRS
+
+
+raster_file = rasterio.open(r"D:\Python_work\Agriculture\Python_Files\NDVI\ndvi_input_img\Raw_Mosaic_Images\20200101_20200115_mos.tif")
+
+raster_array = raster_file.read()
+
+raster_file
+
+raster_array
+
+driver = 'GTiff'
+
+dim = raster_array.shape
+
+dim
+
+height = dim[1]
+
+height
+
+width = dim[2]
+
+width
+
+count = 5
+
+dtype = raster_array.dtype
+
+dtype
+
+
+
+crs = CRS.from_epsg(32644)
+
+
+
+transform = from_origin(6465, 7365, 4.7, 4.7)
+
+with rasterio.open('Kahlip.tif', 'w', 
+                   driver=driver,
+                   height=height,
+                   width=width,
+                   count=count,
+                   dtype=dtype,
+                   crs=crs,
+                   transform=transform) as dst:
+    dst.write(raster_array)
+    
+    
+import numpy as np
+import rasterio
+from rasterio.warp import calculate_default_transform, reproject, Resampling
+
+dst_crs = 'EPSG:4326'
+
+with rasterio.open('rasterio/tests/data/RGB.byte.tif') as src:
+    transform, width, height = calculate_default_transform(
+        src.crs, dst_crs, src.width, src.height, *src.bounds)
+    kwargs = src.meta.copy()
+    kwargs.update({
+        'crs': dst_crs,
+        'transform': transform,
+        'width': width,
+        'height': height
+    })
+
+    with rasterio.open('/tmp/RGB.byte.wgs84.tif', 'w', **kwargs) as dst:
+        for i in range(1, src.count + 1):
+            reproject(
+                source=rasterio.band(src, i),
+                destination=rasterio.band(dst, i),
+                src_transform=src.transform,
+                src_crs=src.crs,
+                dst_transform=transform,
+                dst_crs=dst_crs,
+                resampling=Resampling.nearest)    
+    
+    

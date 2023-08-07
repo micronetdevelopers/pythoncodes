@@ -1,0 +1,9 @@
+####### clip the data #####
+
+
+import os
+from osgeo import gdal
+
+cmd = "gdalwarp -t_srs EPSG:32644 -multi -cutline cutline.shp -cblend 200 -of GTiff mosaic.vrt test.tiff"
+
+os.system(cmd)

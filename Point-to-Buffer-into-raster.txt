@@ -1,0 +1,221 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jan 27 11:50:57 2023
+
+@author: admin
+"""
+
+from osgeo import ogr
+from osgeo import gdal
+
+# set pixel size
+pixel_size = 1
+no_data_value = -9999
+
+# Shapefile input name
+# input projection must be in Cartesian system in meters
+# input wgs 84 or EPSG: 4326 will NOT work!!!
+input_shp = r'D:\Shape_File\India_state_shapefile\States.shp'
+
+# TIF Raster file to be created
+output_raster = r'shape-to-raster.tif'
+
+
+# Open the data source get the layer object
+# assign extent coordinates
+open_shp = ogr.Open(input_shp)
+
+shp_layer = open_shp.GetLayer()
+
+x_min, x_max, y_min, y_max = shp_layer.GetExtent()
+
+
+# calculate raster resolution
+x_res = int((x_max - x_min) / pixel_size)
+y_res = int((y_max - y_min) / pixel_size)
+
+
+# set the image type for export
+image_type = 'GTiff'
+driver = gdal.GetDriverByName(image_type)
+
+new_raster = driver.Create(output_raster, x_res, y_res, 1, 
+gdal.GDT_Byte)
+
+new_raster.SetGeoTransform((x_min, pixel_size, 0, y_max, 0, 
+-pixel_size))
+
+
+
+# get the raster band we want to export too
+raster_band = new_raster.GetRasterBand(1)
+# assign the no data value to empty cells
+raster_band.SetNoDataValue(no_data_value)
+# run vector to raster on new raster with input Shapefile
+gdal.RasterizeLayer(new_raster, [1], shp_layer, 
+burn_values=[255])
+
+
+'''
+#### 
+
+import geopandas as gpd
+import matplotlib.pyplot as plt
+
+Shapefile = gpd.read_file(r'D:\Shape_File\India_state_shapefile\States.shp')
+
+Shapefile.head()
+
+Shapefile.crs
+
+fig, ax = plt.subplots(1, figsize = (8,12))
+Shapefile.plot(ax=ax, column = 'INDIASLN_I', cmap='jet', legend = True)
+plt.xlable('Longitude')
+plt.ylable('Latitude')
+plt.show
+
+
+
+from osgeo import gdal, ogr, osr
+
+input_shp = ogr.Open(r'D:\Shape_File\India_state_shapefile\States.shp')
+source_layer = input_shp.GetLayer()
+defn = source_layer.GetLayerDefn()
+column_name = []
+for n in range(defn.GetFieldCount()):
+    fdefn = defn.GetFielDefn(n)      # getting some error at this line
+    column_name.append(fdefn.name)
+
+'''
+
+    
+######### 
+
+from osgeo import gdal, ogr, osr
+
+shapefile = r'D:\Shape_File\India_state_shapefile\New-folder\schools.shp'
+
+
+output_raster = 'output.tif'
+
+input_shp = ogr.Open(shapefile)
+shp_layer = input_shp.GetLayer()
+
+pixel_size = 0.5
+xmin, xmax, ymin, ymax = shp_layer.GetExtent()
+
+ds = gdal.Rasterize(output_raster, shapefile, xRes=pixel_size, yRes=pixel_size, 
+                    burnValues=255, outputBounds=[xmin, ymin, xmax, ymax], 
+                    outputType=gdal.GDT_Byte)
+ds = None
+
+
+
+
+
+
+
+
+from osgeo import gdal, ogr, osr
+
+inputfiles = r"D:\Shape_File\India_state_shapefile\New-folder\points-buffer.shp"
+
+# Open the point shapefile
+point_ds = ogr.Open(inputfiles)
+
+# Get the layer from the shapefile
+point_layer = point_ds.GetLayer()
+
+# Create the output raster
+x_min, x_max, y_min, y_max = point_layer.GetExtent()
+
+x_res = int((x_max - x_min) / 5)
+y_res = int((y_max - y_min) / 5)
+
+raster_ds = gdal.GetDriverByName('GTiff').Create('output.tif', x_res, y_res, 1, gdal.GDT_Byte)
+raster_ds.SetGeoTransform((x_min, 5, 0, y_max, 0, -5))
+
+# Rasterize the point shapefile
+gdal.RasterizeLayer(raster_ds, [1], point_layer, burn_values=[1])
+
+# Save and close the raster
+raster_ds = None
+
+
+
+
+
+############## buffering points #################
+import geopandas as gpd
+import matplotlib.pyplot as plt
+
+Shapefile = gpd.read_file('points.shp')
+
+type(Shapefile)
+
+
+Shapefile.head()
+
+
+Shapefile.geom_type.head()
+
+Shapefile.crs
+
+fig, ax = plt.subplots(1, figsize = (5,5))
+Shapefile.plot(ax=ax, column = 'id', cmap='jet', legend = True)
+#plt.xlable('Longitude')
+#plt.ylable('Latitude')
+plt.show
+
+
+
+# Create a buffered polygon layer from your plot location points
+Shapefile_poly = Shapefile.copy()
+
+print(Shapefile_poly)
+
+# Buffer each point using a 20 meter circle radius
+# and replace the point geometry with the new buffered geometry
+# Buffer the points using a square cap style
+# Note cap_style: round = 1, flat = 2, square = 3
+Shapefile_poly["geometry"] = Shapefile.geometry.buffer(20,cap_style = 3)
+
+Shapefile_poly.head()
+
+Shapefile_poly.to_file('points-buffer.shp')  
+
+fig, ax = plt.subplots(1, figsize = (5,5))
+Shapefile_poly.plot(ax=ax, column = 'id', cmap='jet', legend = True)
+#plt.xlable('Longitude')
+#plt.ylable('Latitude')
+plt.show
+
+
+######################
+from osgeo import gdal
+
+filename = r"D:\Shape_File\India_state_shapefile\New-folder\output.tif"
+
+input_raster = gdal.Open(filename)
+
+output_raster = "points-buffer-repojrct-01.tif"
+
+warp = gdal.Warp(output_raster,input_raster,dstSRS='EPSG:4326')
+
+warp = None # Closes the files
+
+
+
+# Imports PIL module
+import PIL
+ 
+# creating a image object (new image object) with
+# RGB mode and size 200x200
+im = PIL.Image.new(mode="RGB", size=(5, 5), color = (153, 153, 255))
+ 
+# This method will show image in any image viewer
+im.show()
+
+
+
+
